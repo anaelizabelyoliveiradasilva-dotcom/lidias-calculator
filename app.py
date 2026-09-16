@@ -2,27 +2,53 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-# 1. Configuração da Página (Layout Largo para o Dashboard)
-st.set_page_config(page_title="Lidia's Calculator", page_icon="💠", layout="wide")
+# 1. Configuração da Página
+st.set_page_config(page_title="Lidia's Calculator", page_icon="💠", layout="wide", initial_sidebar_state="expanded")
 
-# Estilo CSS para replicar o seu design limpo em tons frios
+# 2. Estilo CSS Avançado (Baseado no seu design azul e limpo)
 st.markdown("""
     <style>
-    .stApp { background-color: #f0f4f8; }
+    /* Cor de fundo da página principal */
+    .stApp { background-color: #f4f7fb; }
+    
+    /* Estilo da Barra Lateral (Sidebar) */
+    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e0e6ed; }
+    
+    /* Botão Principal */
     div.stButton > button:first-child {
-        background-color: #1e88e5; color: white; border-radius: 8px; font-weight: bold;
+        background-color: #1a73e8; color: white; border-radius: 8px; font-weight: bold; width: 100%; border: none; padding: 10px;
     }
-    div.stButton > button:first-child:hover { background-color: #1565c0; color: white; }
+    div.stButton > button:first-child:hover { background-color: #1557b0; }
+    
+    /* Cartões Brancos (Cards) */
     .card {
-        background-color: white; padding: 20px; border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;
+        background-color: white; padding: 25px; border-radius: 16px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid #eef2f6;
     }
+    
+    /* Títulos e Textos */
+    h1, h2, h3 { color: #0d2136; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    p { color: #4a5c70; }
+    
+    /* Estilo das Métricas */
+    [data-testid="stMetricValue"] { color: #1a73e8; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
-# Cabeçalho
-st.markdown("<h1>💠 Lidia's Calculator</h1>", unsafe_allow_html=True)
-st.markdown("### BiFeO₃ Crystallographic Plane Calculator", unsafe_allow_html=True)
+# 3. Barra Lateral (Menu que você desenhou)
+with st.sidebar:
+    st.markdown("<h1>💠 Lidia's<br>Calculator</h1>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("🏠 **Calculator**")
+    st.markdown("⚛️ Crystal Structure")
+    st.markdown("📄 About")
+    st.markdown("🔬 Methods")
+    st.markdown("---")
+    st.caption("Materials Science • Crystallography")
+
+# 4. Cabeçalho Principal
+st.markdown("## BiFeO₃ Crystallographic Plane Calculator")
+st.markdown("Element influence by plane • |Bi| + |Fe| + |O| contribution • Intensity from module sum")
 st.markdown("---")
 
 # Dados Físicos (Co-Ka)
@@ -38,39 +64,40 @@ def get_posicoes_equivalentes(x, y, z):
     centros = [(0,0,0), (1/3, 2/3, 2/3), (2/3, 1/3, 1/3)]
     return [((px+cx)%1, (py+cy)%1, (pz+cz)%1) for cx, cy, cz in centros for px, py, pz in pos_base]
 
-# Layout em duas colunas principais (igual ao seu design)
-col_left, col_right = st.columns([1, 2])
+# 5. Layout em Duas Colunas
+col_left, col_right = st.columns([1, 1.8])
 
 with col_left:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("### 🧮 Calculate a Plane")
-    st.write("Enter Miller indices (h k l)")
+    st.caption("Enter Miller indices (h k l) to see element contributions.")
     
     h_col, k_col, l_col = st.columns(3)
     with h_col: h = st.number_input("h", value=1, step=1)
     with k_col: k = st.number_input("k", value=1, step=1)
     with l_col: l = st.number_input("l", value=0, step=1)
     
-    calcular = st.button("Calculate", use_container_width=True)
+    calcular = st.button("Calculate")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Exibe a imagem gerada abaixo dos inputs
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("### 🧊 BiFeO₃ Crystal Structure")
+    st.caption("Rhombohedral (R3c)")
     try:
         st.image("estrutura.png", use_column_width=True)
     except:
-        pass
+        st.info("Imagem da estrutura não encontrada.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_right:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f"### 📊 Results for plane ({h} {k} {l})")
     
-    # CORREÇÃO DO PLANO CRISTALOGRÁFICO: Regra de Seleção para R3c (-h + k + l = 3n)
     if (-h + k + l) % 3 != 0:
-        st.error(f"⚠️ Ausência Sistemática: O plano ({h} {k} {l}) é proibido pela regra de reflexão do grupo espacial R3c ($-h+k+l = 3n$). A intensidade é zero.")
+        st.error(f"⚠️ Ausência Sistemática: O plano ({h} {k} {l}) é proibido pela regra do grupo espacial R3c. Intensidade é zero.")
     elif h == 0 and k == 0 and l == 0:
         st.error("⚠️ Planos (0 0 0) não geram difração.")
     else:
-        # Cálculos Físicos
         inv_d2 = (4.0/3.0) * (h**2 + h*k + k**2) / (a**2) + (l**2) / (c**2)
         d = np.sqrt(1.0 / inv_d2)
         s = 1.0 / (2.0 * d)
@@ -97,21 +124,18 @@ with col_right:
 
         F_modulo_total = np.sqrt(F_real_total**2 + F_imag_total**2)
 
-        # Módulos de Cartões (Cards) para os elementos
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("🟣 Bi contribution", f"{resultados_at['Bi']:.3f}")
-        m2.metric("🟠 Fe contribution", f"{resultados_at['Fe']:.3f}")
-        m3.metric("🔴 O contribution", f"{resultados_at['O']:.3f}")
-        m4.metric("📈 Intensity |F|", f"{F_modulo_total:.3f}")
+        m1.metric("🟣 Bi", f"{resultados_at['Bi']:.3f}")
+        m2.metric("🟠 Fe", f"{resultados_at['Fe']:.3f}")
+        m3.metric("🔴 O", f"{resultados_at['O']:.3f}")
+        m4.metric("📈 |F|", f"{F_modulo_total:.3f}")
         
         st.markdown("---")
-        
-        # Gráfico de Barras igual ao design
-        st.markdown("##### Element Contributions")
+        st.markdown("##### 📈 Element Contributions")
         df_chart = pd.DataFrame({
-            "Element": ["Bi", "Fe", "O"],
+            "Element": ["Bi (Bismuth)", "Fe (Iron)", "O (Oxygen)"],
             "Contribution": [resultados_at['Bi'], resultados_at['Fe'], resultados_at['O']]
         })
-        st.bar_chart(df_chart.set_index("Element"), height=250, use_container_width=True)
+        st.bar_chart(df_chart.set_index("Element"), height=250)
         
     st.markdown('</div>', unsafe_allow_html=True)
